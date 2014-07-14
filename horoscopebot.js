@@ -51,9 +51,16 @@ function fetchTweets() {
 			var data = Utilities.jsonParse( result.getContentText() );
 			if (data) {
 				for (var i = data.statuses.length - 1; i >= 0; i--) {
+					// extract phrases from the tweet
 					var tweet = data.statuses[i];
 					findDivination( tweet.text );
-					ScriptProperties.setProperty( "MAX_TWITTER_ID", tweet.id_str );
+					
+					// make sure we don't reuse tweets
+					var mostRecent = ScriptProperties.getProperty( "MAX_TWITTER_ID" );
+					if( parseInt( tweet.id_str ) > parseInt( mostRecent ) )
+					{
+						ScriptProperties.setProperty( "MAX_TWITTER_ID", tweet.id_str );
+					}
 				}
 			}
 		}
@@ -154,6 +161,7 @@ function isOffensive(text) {
 		"dyke",
 		"fag",
 		"nigger",
+		"nigga",
 		"tranny",
 		"trannies",
 		"paki",
