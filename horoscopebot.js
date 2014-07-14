@@ -212,7 +212,7 @@ function isOffensive(text) {
 function sendTweet(tweet) {
 	try {
 		// write to a local google doc
-		var doc = DocumentApp.openById('1JldE2CtdVMuxG4_IOBUqn2r-jRtZVct0eLglTBLMaIY');
+		var doc = DocumentApp.openById('GGGGHHHHIIIIJJJJ');
 		doc.appendParagraph(tweet);
 
 		// post the tweet
