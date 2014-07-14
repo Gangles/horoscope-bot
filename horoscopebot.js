@@ -53,11 +53,11 @@ function fetchTweets() {
 				for (var i = data.statuses.length - 1; i >= 0; i--) {
 					// extract phrases from the tweet
 					var tweet = data.statuses[i];
-					findDivination( tweet.text );
+					var matched = findDivination( tweet.text );
 					
 					// make sure we don't reuse tweets
 					var mostRecent = ScriptProperties.getProperty( "MAX_TWITTER_ID" );
-					if( parseInt( tweet.id_str ) > parseInt( mostRecent ) )
+					if( matched && parseInt( tweet.id_str ) > parseInt( mostRecent ) )
 					{
 						ScriptProperties.setProperty( "MAX_TWITTER_ID", tweet.id_str );
 					}
@@ -113,10 +113,15 @@ function findDivination(text) {
 
 		if (first == 0) {
 			ScriptProperties.setProperty( "FIRST_DIVINATION", match[1].trim() );
+			return true;
 		} else if (second == 0 && match[1] != first) {
 			ScriptProperties.setProperty( "SECOND_DIVINATION", match[1].trim() );
+			return true;
 		}
 	}
+	
+	// didn't find a match or already full
+	return false;
 }
 
 function getStarSignMessage(sign) {
