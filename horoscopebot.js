@@ -94,6 +94,12 @@ function findDivination(text) {
 		return false;
 	}
 	
+	// avoid very commons tweets or tweets that don't fit the format
+	if ( /follow me/i.test(text) || /all you will ever/i.test(text) )
+	{
+		return false;
+	}
+	
 	// hacky way to remove links
 	text = text.replace(/http/g, ".");
 	
@@ -103,8 +109,8 @@ function findDivination(text) {
 	// replace newlines with periods
 	text = text.replace(/(\r\n|\n|\r)/gm, ".");
 
-	// match everything after "you will"
-	var re = /you will ([\w\s']{10,140})/i;
+	// match every non-punctuation after "you will"
+	var re = /you will ([\w\s'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/i;
 	var match = re.exec(text);
 
 	if (match != null && match[1].length < 49 && !isOffensive(match[1])) {
@@ -114,7 +120,7 @@ function findDivination(text) {
 		if (first == 0) {
 			ScriptProperties.setProperty( "FIRST_DIVINATION", match[1].trim() );
 			return true;
-		} else if (second == 0 && match[1] != first) {
+		} else if (second == 0 && first.localeCompare( match[1] ) != 0) {
 			ScriptProperties.setProperty( "SECOND_DIVINATION", match[1].trim() );
 			return true;
 		}
