@@ -88,15 +88,24 @@ function fetchTweets() {
 }
 
 function findDivination(text) {
-	// avoid being insensitive
-	if ( /rest in peace/i.test(text) || /RIP/.test(text) || /missed/i.test(text) )
-	{
-		return false;
+	// general text patterns to avoid
+	// either insensitive or too common
+	var toAvoid = [
+		"rest in peace",
+		"you will be missed",
+		"follow me",
+		"you will ever",
+		"you will never see this"
+	];
+
+	for (var i = 0; i < rules.length; i++) {
+		if (text.toLowerCase().indexOf(toAvoid[i]) >= 0) {
+			return false;
+		}
 	}
-	
-	// avoid very commons tweets or tweets that don't fit the format
-	if ( /follow me/i.test(text) || /all you will ever/i.test(text) )
-	{
+
+	// the only case-sensitive rule...
+	if (/RIP/.test(text)) {
 		return false;
 	}
 	
@@ -111,18 +120,30 @@ function findDivination(text) {
 
 	// match every non-punctuation after "you will"
 	var re = /you will ([\w\s'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/i;
-	var match = re.exec(text);
+	var matches = re.exec(text);
 
-	if (match != null && match[1].length < 49 && !isOffensive(match[1])) {
-		var first = ScriptProperties.getProperty("FIRST_DIVINATION");
-		var second = ScriptProperties.getProperty("SECOND_DIVINATION");
+	// check all the regex matches
+	if (matches != null && matches.length > 1) {
+		// we want the longest matching string
+		var index = 1;
+		for (var i = 1; i < matches.length; ++i) {
+			if (matches[i].length > matches[index].length) {
+				index = i;
+			}
+		}
+		var best = matches[index].trim();
 
-		if (first == 0) {
-			ScriptProperties.setProperty( "FIRST_DIVINATION", match[1].trim() );
-			return true;
-		} else if (second == 0 && first.localeCompare( match[1] ) != 0) {
-			ScriptProperties.setProperty( "SECOND_DIVINATION", match[1].trim() );
-			return true;
+		if ( best.length < 49 && !isOffensive( best ) ) {
+			var first = ScriptProperties.getProperty("FIRST_DIVINATION");
+			var second = ScriptProperties.getProperty("SECOND_DIVINATION");
+
+			if (first == 0) {
+				ScriptProperties.setProperty( "FIRST_DIVINATION", best );
+				return true;
+			} else if (second == 0 && first.localeCompare( best ) != 0) {
+				ScriptProperties.setProperty( "SECOND_DIVINATION", best );
+				return true;
+			}
 		}
 	}
 	
