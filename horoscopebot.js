@@ -112,18 +112,32 @@ function findDivination(text) {
 	// hacky way to remove links
 	text = text.replace(/http/g, ".");
 	
-	// remove hashtags but leave the original word
-	text = text.replace(/#/g, "");
-	
 	// replace newlines with periods
 	text = text.replace(/(\r\n|\n|\r)/gm, ".");
+	
+	// find all hashtags
+	var hashtags;
+	var tagRE = /#([\w]+)[$\W]/;
+	while ((hashtags = tagRE.exec(text)) !== null) {
+		var thisTag = new RegExp("#" + match[1], "g");
+		if (match[1].length > 10) {
+			// replace long hashtags with a period
+			text = text.replace(thisTag, ".");
+		} else {
+			// replace short hashtags with the word
+			text = text.replace(thisTag, match[1]);
+		}
+
+		// reset the regex matching
+		tagRE.lastIndex = 0;
+	}
 
 	// match every non-punctuation after "you will"
-	var re = /you will ([\w\s'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/i;
+	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/gi;
+	
+	// find the longest regex match
 	var matches;
 	var best = "";
-
-	// find the longest regex match
 	while ((matches = re.exec(text)) !== null) {
 		var thisMatch = matches[1].trim();
 		if (thisMatch.length > best.length) {
@@ -132,7 +146,7 @@ function findDivination(text) {
 	}
 	
 	// record appropriate matches
-	if ( best.length > 18 && best.length < 49 && !isOffensive( best ) ) {
+	if ( best.length > 18 && best.length < 49 && best.split(" ").length > 2 && !isOffensive(best) ) {
 		var first = ScriptProperties.getProperty("FIRST_DIVINATION");
 		var second = ScriptProperties.getProperty("SECOND_DIVINATION");
 
