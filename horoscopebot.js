@@ -121,15 +121,15 @@ function findDivination(text) {
 	while ((hashtags = tagRE.exec(text)) !== null) {
 		var thisTag = new RegExp("#" + match[1], "g");
 		if (match[1].length > 10) {
-			// replace long hashtags with a period
-			text = text.replace(thisTag, ".");
+			// disregard tweets with long hashtags
+			return false;
 		} else {
 			// replace short hashtags with the word
 			text = text.replace(thisTag, match[1]);
+			
+			// reset the regex matching
+			tagRE.lastIndex = 0;
 		}
-
-		// reset the regex matching
-		tagRE.lastIndex = 0;
 	}
 
 	// match every non-punctuation after "you will"
