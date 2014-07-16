@@ -98,7 +98,7 @@ function findDivination(text) {
 		"you will never see this"
 	];
 
-	for (var i = 0; i < rules.length; i++) {
+	for (var i = 0; i < toAvoid.length; i++) {
 		if (text.toLowerCase().indexOf(toAvoid[i]) >= 0) {
 			return false;
 		}
@@ -120,30 +120,28 @@ function findDivination(text) {
 
 	// match every non-punctuation after "you will"
 	var re = /you will ([\w\s'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/i;
-	var matches = re.exec(text);
+	var matches;
+	var best = "";
 
-	// check all the regex matches
-	if (matches != null && matches.length > 1) {
-		// we want the longest matching string
-		var index = 1;
-		for (var i = 1; i < matches.length; ++i) {
-			if (matches[i].length > matches[index].length) {
-				index = i;
-			}
+	// find the longest regex match
+	while ((matches = re.exec(text)) !== null) {
+		var thisMatch = matches[1].trim();
+		if (thisMatch.length > best.length) {
+			best = thisMatch;
 		}
-		var best = matches[index].trim();
+	}
+	
+	// record appropriate matches
+	if ( best.length > 18 && best.length < 49 && !isOffensive( best ) ) {
+		var first = ScriptProperties.getProperty("FIRST_DIVINATION");
+		var second = ScriptProperties.getProperty("SECOND_DIVINATION");
 
-		if ( best.length < 49 && !isOffensive( best ) ) {
-			var first = ScriptProperties.getProperty("FIRST_DIVINATION");
-			var second = ScriptProperties.getProperty("SECOND_DIVINATION");
-
-			if (first == 0) {
-				ScriptProperties.setProperty( "FIRST_DIVINATION", best );
-				return true;
-			} else if (second == 0 && first.localeCompare( best ) != 0) {
-				ScriptProperties.setProperty( "SECOND_DIVINATION", best );
-				return true;
-			}
+		if (first == 0) {
+			ScriptProperties.setProperty( "FIRST_DIVINATION", best );
+			return true;
+		} else if (second == 0 && first.localeCompare( best ) != 0) {
+			ScriptProperties.setProperty( "SECOND_DIVINATION", best );
+			return true;
 		}
 	}
 	
