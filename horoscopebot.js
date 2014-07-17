@@ -87,15 +87,21 @@ function fetchTweets() {
 	}
 }
 
-function findDivination(text) {
+function findDivination(text) {	
 	// general text patterns to avoid
-	// either insensitive or too common
 	var toAvoid = [
+		// avoid being insensitive
 		"rest in peace",
 		"you will be missed",
+		"Israel",
+		"West Bank",
+		// avoid common tweets
 		"follow me",
 		"you will ever",
-		"you will never see this"
+		"you will never see this",
+		// avoid threats
+		"you will die",
+		"kill you"
 	];
 
 	for (var i = 0; i < toAvoid.length; i++) {
@@ -115,25 +121,28 @@ function findDivination(text) {
 	// replace newlines with periods
 	text = text.replace(/(\r\n|\n|\r)/gm, ".");
 	
+	// fix the broken ampersands twitter sends
+	text = text.replace(/&amp;/g, "&");
+	
 	// find all hashtags
 	var hashtags;
 	var tagRE = /#([\w]+)[$\W]/;
 	while ((hashtags = tagRE.exec(text)) !== null) {
-		var thisTag = new RegExp("#" + match[1], "g");
-		if (match[1].length > 10) {
+		if (hashtags[1].length > 10) {
 			// disregard tweets with long hashtags
 			return false;
 		} else {
 			// replace short hashtags with the word
-			text = text.replace(thisTag, match[1]);
+			var thisTag = new RegExp("#" + hashtags[1], "g");
+			text = text.replace(thisTag, hashtags[1]);
 			
 			// reset the regex matching
 			tagRE.lastIndex = 0;
 		}
 	}
 
-	// match every non-punctuation after "you will"
-	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})/gi;
+	// match every character after "you will" until punctuation or the end of input
+	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})(?:[$\r\n]|[^\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ])/gmi;
 	
 	// find the longest regex match
 	var matches;
@@ -207,7 +216,7 @@ function isOffensive(text) {
 		"nigger",
 		"nigga",
 		"tranny",
-		"trannies",
+		"trannie",
 		"paki",
 		"pussy",
 		"retard",
@@ -241,7 +250,9 @@ function isOffensive(text) {
 		"chinamen",
 		"golliwog",
 		"crip",
-		"raghead"
+		"raghead",
+		"rape",
+		"raping"
 	];
 
 	for (var i = 0; i < blacklist.length; i++) {
