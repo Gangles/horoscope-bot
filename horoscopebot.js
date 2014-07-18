@@ -1,7 +1,7 @@
 function start() {
 	// insert twitter API keys here
-	var TWITTER_CONSUMER_KEY = "wYQXY8Cx8AcdhZXmSw9GrDADQ";
-	var TWITTER_CONSUMER_SECRET = "3PLikEo1IgTVv7GFUsvEbOLR08otz5iSkd9mKbavRxwtzxbMXu";
+	var TWITTER_CONSUMER_KEY = "AAAABBBBCCCC";
+	var TWITTER_CONSUMER_SECRET = "DDDDEEEEFFFF";
 	
 	// store API information
 	ScriptProperties.setProperty("CONSUMER_KEY", TWITTER_CONSUMER_KEY);
@@ -266,7 +266,7 @@ function isOffensive(text) {
 function sendTweet(tweet) {
 	try {
 		// write to a local google doc
-		var doc = DocumentApp.openById('1JldE2CtdVMuxG4_IOBUqn2r-jRtZVct0eLglTBLMaIY');
+		var doc = DocumentApp.openById('GGGGHHHHIIIIJJJJ');
 		doc.appendParagraph(tweet);
 
 		// post the tweet
