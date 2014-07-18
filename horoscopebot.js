@@ -1,7 +1,7 @@
 function start() {
 	// insert twitter API keys here
-	var TWITTER_CONSUMER_KEY = "AAAABBBBCCCC";
-	var TWITTER_CONSUMER_SECRET = "DDDDEEEEFFFF";
+	var TWITTER_CONSUMER_KEY = "wYQXY8Cx8AcdhZXmSw9GrDADQ";
+	var TWITTER_CONSUMER_SECRET = "3PLikEo1IgTVv7GFUsvEbOLR08otz5iSkd9mKbavRxwtzxbMXu";
 	
 	// store API information
 	ScriptProperties.setProperty("CONSUMER_KEY", TWITTER_CONSUMER_KEY);
@@ -87,18 +87,20 @@ function fetchTweets() {
 	}
 }
 
-function findDivination(text) {	
+function findDivination(text) {
 	// general text patterns to avoid
 	var toAvoid = [
 		// avoid being insensitive
 		"rest in peace",
 		"you will be missed",
-		"Israel",
-		"West Bank",
+		"israel",
+		"west bank",
+		"gaza",
 		// avoid common tweets
 		"follow me",
 		"you will ever",
 		"you will never see this",
+		"face their own karma",
 		// avoid threats
 		"you will die",
 		"kill you"
@@ -142,16 +144,13 @@ function findDivination(text) {
 	}
 
 	// match every character after "you will" until punctuation or the end of input
-	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})(?:[$\r\n]|[^\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ])/gmi;
+	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})(?:[$\r\n]|[^\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ])/mi;
 	
-	// find the longest regex match
-	var matches;
+	// find a substring that matches the regex
+	var match = re.exec(text);
 	var best = "";
-	while ((matches = re.exec(text)) !== null) {
-		var thisMatch = matches[1].trim();
-		if (thisMatch.length > best.length) {
-			best = thisMatch;
-		}
+	if (match !== null) {
+		best = match[1].trim();
 	}
 	
 	// record appropriate matches
@@ -267,7 +266,7 @@ function isOffensive(text) {
 function sendTweet(tweet) {
 	try {
 		// write to a local google doc
-		var doc = DocumentApp.openById('GGGGHHHHIIIIJJJJ');
+		var doc = DocumentApp.openById('1JldE2CtdVMuxG4_IOBUqn2r-jRtZVct0eLglTBLMaIY');
 		doc.appendParagraph(tweet);
 
 		// post the tweet
