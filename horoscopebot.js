@@ -14,7 +14,7 @@ var twitterSearch = {
 
 // global bot variables
 var maxTwitterID = 0;
-var starSign = Math.floor((Math.random() * 12);
+var starSign = Math.floor((Math.random() * 12));
 
 function searchTwitter() {
 	// initiate a twitter API search
