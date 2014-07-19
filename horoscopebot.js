@@ -1,3 +1,8 @@
+// Heroku requires that applications respond to HTTP requests
+var app = require('express').createServer();
+app.get('/', function(req, res){ res.send('Hello world.'); });
+app.listen(3000);
+
 // import twitter library
 // https://github.com/ttezel/twit
 var Twit = require('twit');
@@ -266,17 +271,6 @@ function isOffensive(text) {
 		}
 	}
 	return false;
-}
-
-function encodeString(q) {
-	// encode characters such as !, *, (), etc.
-	var str = encodeURIComponent(q);
-	str = str.replace(/!/g, '%21');
-	str = str.replace(/\*/g, '%2A');
-	str = str.replace(/\(/g, '%28');
-	str = str.replace(/\)/g, '%29');
-	str = str.replace(/'/g, '%27');
-	return str;
 }
 
 // try to post a tweet as soon as we run the program
