@@ -1,0 +1,1 @@
+web: node horoscopebot.js

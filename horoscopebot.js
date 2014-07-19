@@ -1,98 +1,111 @@
-function start() {
-	// insert twitter API keys here
-	var TWITTER_CONSUMER_KEY = "AAAABBBBCCCC";
-	var TWITTER_CONSUMER_SECRET = "DDDDEEEEFFFF";
-	
-	// store API information
-	ScriptProperties.setProperty("CONSUMER_KEY", TWITTER_CONSUMER_KEY);
-	ScriptProperties.setProperty("CONSUMER_SECRET", TWITTER_CONSUMER_SECRET);
+// import twitter library
+// https://github.com/ttezel/twit
+var Twit = require('twit');
+var T = new Twit(require('./config.js'));
 
-	// store bot information
-	ScriptProperties.setProperty("FIRST_DIVINATION", 0);
-	ScriptProperties.setProperty("SECOND_DIVINATION", 0);
-	ScriptProperties.setProperty("STAR_SIGN", 0);
+// search for the latest tweets containing "you will"
+// https://dev.twitter.com/docs/api/1.1/get/search/tweets
+var twitterSearch = {
+	q: "%22you%20will%22",
+	count: 40,
+	lang: "en",
+	result_type: "recent"
+};
 
-	// ID of the last tweet read by the bot
-	ScriptProperties.setProperty("MAX_TWITTER_ID", 0);
+// global bot variables
+var maxTwitterID = 0;
+var starSign = Math.floor((Math.random() * 12);
 
-	// delete existing triggers, if any
-	var triggers = ScriptApp.getScriptTriggers();
-	for (var i = 0; i < triggers.length; i++) {
-		ScriptApp.deleteTrigger(triggers[i]);
-	}
-
-	// look for new tweets every 15 minutes
-	ScriptApp.newTrigger("fetchTweets").timeBased().everyMinutes(15).create();
+function searchTwitter() {
+	// initiate a twitter API search
+	twitterSearch.since_id = maxTwitterID;
+	T.get('search/tweets', twitterSearch, searchCallback);
 }
 
-function fetchTweets() {
-	// use oAuth with twitter API 1.1 to connect
-	var oauthConfig = UrlFetchApp.addOAuthService("twitter");
-	oauthConfig.setAccessTokenUrl("https://api.twitter.com/oauth/access_token");
-	oauthConfig.setRequestTokenUrl("https://api.twitter.com/oauth/request_token");
-	oauthConfig.setAuthorizationUrl("https://api.twitter.com/oauth/authorize");
-	oauthConfig.setConsumerKey(ScriptProperties.getProperty("CONSUMER_KEY"));
-	oauthConfig.setConsumerSecret(ScriptProperties.getProperty("CONSUMER_SECRET"));
+function searchCallback( error, data, response ) {
+	// twitter API callback with relevant tweets
+	console.log(error, data);
+	if ( response.statusCode == 200 && !error) {
+		parseTweets( data.statuses );
+	}
+	else {
+		console.log("Search error:", error);
+	}
+}
 
-	// set up a search for tweets
-	var search = "https://api.twitter.com/1.1/search/tweets.json?";
-	search = search + "q=%22you%20will%22&lang=en";
-	search = search + "&since_id=" + ScriptProperties.getProperty("MAX_TWITTER_ID");
-	var options = {
-		"method": "get",
-		"oAuthServiceName": "twitter",
-		"oAuthUseToken": "always"
-	};
+function postTweet( message ) {
+	// post a new status to the twitter API
+	console.log( "Posting tweet:", message );
+	T.post('statuses/update', { status: message }, postCallback);
+}
 
+function postCallback( error, data, response ) {
+	// twitter API callback from posting tweet
+	console.log(error, data);
+	if ( response.statusCode == 200 && !error) {
+		console.log("Post tweet success!");
+	}
+	else {
+		console.log("Post tweet error:", error);
+	}
+}
+
+function parseTweets( statuses )
+{
 	try {
-		// Fetch the twitter search results and look for matches
-		var result = UrlFetchApp.fetch(search, options);
-		if( result.getResponseCode() === 200 ) {
-			var data = Utilities.jsonParse( result.getContentText() );
-			if (data) {
-				for (var i = data.statuses.length - 1; i >= 0; i--) {
-					// extract phrases from the tweet
-					var tweet = data.statuses[i];
-					var matched = findDivination( tweet.text );
-					
-					// make sure we don't reuse tweets
-					var mostRecent = ScriptProperties.getProperty( "MAX_TWITTER_ID" );
-					if( matched && parseInt( tweet.id_str ) > parseInt( mostRecent ) )
-					{
-						ScriptProperties.setProperty( "MAX_TWITTER_ID", tweet.id_str );
-					}
-				}
+		// loop through every given status
+		var divinations = [];
+		var i = statuses.length - 1;
+		while ( i >= 0 && divinations.length < 2 ) {
+			// extract phrases from the tweet
+			var tweet = statuses[i];
+			var text;
+			if( tweet.hasOwnProperty('retweeted_status') ) {
+				text = tweet.retweeted_status.text;
+			} else {
+				text = tweet.text;
 			}
+			var match = findDivination(text, divinations);
+			
+			// if we found a match, record it
+			if (match != 0) {
+				divinations.push(match);
+				maxTwitterID = tweet.id_str;
+			}
+	
+			i--;
+		}
+		
+		// if we're ready, send the tweet
+		if ( divinations.length > 1 ) {
+			var tweet = getStarSignMessage( starSign );
+			tweet += "You will " + divinations.shift() + ", ";
+			tweet += "but you will " + divinations.shift() + ".";
+			postTweet( tweet );
+			++starSign;
 		}
 	} catch (e) {
 		// Log oAuth errors if any.
-		Logger.log(e.toString());
-	}
-
-	var first = ScriptProperties.getProperty("FIRST_DIVINATION");
-	var second = ScriptProperties.getProperty("SECOND_DIVINATION");
-	
-	if ( first != 0 && second != 0 ) {
-		// if we're ready, send the tweet
-		var sign = parseInt( ScriptProperties.getProperty("STAR_SIGN") );
-		var tweet = getStarSignMessage(sign);
-		tweet += "You will " + first + ", ";
-		tweet += "but you will " + second + ".";
-		sendTweet( tweet );
-
-		// reset local variables
-		ScriptProperties.setProperty( "FIRST_DIVINATION",  0 );
-		ScriptProperties.setProperty( "SECOND_DIVINATION", 0 );
-		ScriptProperties.setProperty( "STAR_SIGN", sign + 1 );
+		console.log("Parsing error:", e.toString());
 	}
 }
 
-function findDivination(text) {
+function findDivination(text, matches) {
+	// avoid text we've already matched
+	for (var i = 0; i < matches.length; i++) {
+		if (text.toLowerCase().indexOf(matches[i]) >= 0) {
+			return 0;
+		}
+	}
+	
 	// general text patterns to avoid
 	var toAvoid = [
 		// avoid being insensitive
 		"rest in peace",
 		"you will be missed",
+		"enter jannah",
+		"allah",
+		"ukraine",
 		"israel",
 		"west bank",
 		"gaza",
@@ -101,20 +114,22 @@ function findDivination(text) {
 		"you will ever",
 		"you will never see this",
 		"face their own karma",
+		"let you go or give up on you",
 		// avoid threats
+		"get pregnant and die",
 		"you will die",
 		"kill you"
 	];
 
 	for (var i = 0; i < toAvoid.length; i++) {
 		if (text.toLowerCase().indexOf(toAvoid[i]) >= 0) {
-			return false;
+			return 0;
 		}
 	}
 
 	// the only case-sensitive rule...
 	if (/RIP/.test(text)) {
-		return false;
+		return 0;
 	}
 	
 	// hacky way to remove links
@@ -132,7 +147,7 @@ function findDivination(text) {
 	while ((hashtags = tagRE.exec(text)) !== null) {
 		if (hashtags[1].length > 10) {
 			// disregard tweets with long hashtags
-			return false;
+			return 0;
 		} else {
 			// replace short hashtags with the word
 			var thisTag = new RegExp("#" + hashtags[1], "g");
@@ -155,20 +170,11 @@ function findDivination(text) {
 	
 	// record appropriate matches
 	if ( best.length > 18 && best.length < 49 && best.split(" ").length > 2 && !isOffensive(best) ) {
-		var first = ScriptProperties.getProperty("FIRST_DIVINATION");
-		var second = ScriptProperties.getProperty("SECOND_DIVINATION");
-
-		if (first == 0) {
-			ScriptProperties.setProperty( "FIRST_DIVINATION", best );
-			return true;
-		} else if (second == 0 && first.localeCompare( best ) != 0) {
-			ScriptProperties.setProperty( "SECOND_DIVINATION", best );
-			return true;
-		}
+		return best;
 	}
 	
-	// didn't find a match or already full
-	return false;
+	// didn't find a match
+	return 0;
 }
 
 function getStarSignMessage(sign) {
@@ -222,7 +228,6 @@ function isOffensive(text) {
 		"slut",
 		"titt",
 		"tits",
-		"wop",
 		"whore",
 		"hoes",
 		"chink",
@@ -256,31 +261,11 @@ function isOffensive(text) {
 
 	for (var i = 0; i < blacklist.length; i++) {
 		if (text.toLowerCase().indexOf( blacklist[i] ) >= 0) {
-			Logger.log( blacklist[i] + " is offensive." );
+			console.log( blacklist[i] + " is offensive." );
 			return true;
 		}
 	}
 	return false;
-}
-
-function sendTweet(tweet) {
-	try {
-		// write to a local google doc
-		var doc = DocumentApp.openById('GGGGHHHHIIIIJJJJ');
-		doc.appendParagraph(tweet);
-
-		// post the tweet
-		var options = {
-			"method": "POST",
-			"oAuthServiceName": "twitter",
-			"oAuthUseToken": "always"
-		};
-		var status = "https://api.twitter.com/1.1/statuses/update.json";
-		status = status + "?status=" + encodeString( tweet );
-		var result = UrlFetchApp.fetch(status, options);
-	} catch (e) {
-		Logger.log(e.toString());
-	}
 }
 
 function encodeString(q) {
@@ -293,3 +278,9 @@ function encodeString(q) {
 	str = str.replace(/'/g, '%27');
 	return str;
 }
+
+// try to post a tweet as soon as we run the program
+searchTwitter();
+
+// post again every 15 minutes
+setInterval(searchTwitter, 1000 * 60 * 15);

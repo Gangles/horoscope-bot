@@ -1,0 +1,28 @@
+{
+  "name": "horoscopebot",
+  "version": "0.0.0",
+  "description": "Unreliable horoscopes synthesized from user tweets.",
+  "main": "horoscopebot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gangles/horoscope-bot.git"
+  },
+  "keywords": [
+    "twitter",
+    "bot",
+    "language",
+    "humour"
+  ],
+  "author": "Matthew Gallant",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Gangles/horoscope-bot/issues"
+  },
+  "homepage": "https://github.com/Gangles/horoscope-bot",
+  "dependencies": {
+    "twit": "^1.1.15"
+  }
+}
