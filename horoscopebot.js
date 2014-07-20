@@ -1,14 +1,3 @@
-// Heroku requires that applications respond to HTTP requests
-var express = require("express");
-var app = express();
-app.get('/', function(req, res) {
-	res.send('Hello World!');
-});
-var port = Number(process.env.PORT || 3000);
-app.listen(port, function() {
-	console.log("Listening on " + port);
-});
-
 // import twitter library
 // https://github.com/ttezel/twit
 var Twit = require('twit');
@@ -267,7 +256,9 @@ function isOffensive(text) {
 		"crip",
 		"raghead",
 		"rape",
-		"raping"
+		"raping",
+		"marijuana",
+		"cocaine"
 	];
 
 	for (var i = 0; i < blacklist.length; i++) {

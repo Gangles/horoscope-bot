@@ -1,1 +1,1 @@
-web: node horoscopebot.js
+worker: node horoscopebot.js

@@ -23,7 +23,6 @@
   },
   "homepage": "https://github.com/Gangles/horoscope-bot",
   "dependencies": {
-    "express": "^4.6.1",
     "twit": "^1.1.15"
   }
 }
