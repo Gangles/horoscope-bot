@@ -101,14 +101,7 @@ function parseTweets( statuses )
 	}
 }
 
-function findDivination(text, matches) {
-	// avoid text we've already matched
-	for (var i = 0; i < matches.length; i++) {
-		if (text.toLowerCase().indexOf(matches[i]) >= 0) {
-			return 0;
-		}
-	}
-	
+function findDivination(text, matches) {	
 	// general text patterns to avoid
 	var toAvoid = [
 		// avoid being insensitive
@@ -130,7 +123,8 @@ function findDivination(text, matches) {
 		// avoid threats
 		"get pregnant and die",
 		"you will die",
-		"kill you"
+		"kill you",
+		"will fuck you up"
 	];
 
 	for (var i = 0; i < toAvoid.length; i++) {
@@ -180,7 +174,15 @@ function findDivination(text, matches) {
 		best = match[1].trim();
 	}
 	
-	// reject matches already found in recent tweets
+	// avoid text we've already matched and recorded
+	for (var i = 0; i < matches.length; i++) {
+		var matched = matches[i].toLowerCase();
+		if (matched.indexOf(best.toLowerCase()) >= 0) {
+			return 0;
+		}
+	}
+	
+	// reject matches already found in this bot's recent tweets
 	for (var i = 0; i < recentTweets.length; i++) {
 		var recent = recentTweets[i].toLowerCase();
 		if (recent.indexOf(best.toLowerCase()) >= 0) {
