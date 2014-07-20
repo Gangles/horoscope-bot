@@ -19,7 +19,7 @@ try {
 	var data = fs.readFileSync('blacklist.json', 'ascii');
 	data = JSON.parse(data);
 	blacklist = data.badwords;
-	console.log("Blacklist initialized successfully.")
+	console.log("Blacklist initialized with " + blacklist.length + " words.")
 } catch (err) {
 	console.error("There was an error opening the blacklist file:");
 	console.log(err);
