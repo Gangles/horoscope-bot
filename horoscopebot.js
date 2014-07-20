@@ -12,6 +12,20 @@ var twitterSearch = {
 	result_type: "recent"
 };
 
+// avoid using slurs: https://github.com/dariusk/wordfilter/
+var blacklist = [];
+try {
+	var fs = require('fs');
+	var data = fs.readFileSync('blacklist.json', 'ascii');
+	data = JSON.parse(data);
+	blacklist = data.badwords;
+	console.log("Blacklist initialized successfully.")
+} catch (err) {
+	console.error("There was an error opening the blacklist file:");
+	console.log(err);
+	process.exit(1);
+}
+
 // global bot variables
 var maxTwitterID = 0;
 var recentTweets = [];
@@ -230,60 +244,7 @@ function getStarSignMessage(sign) {
 }
 
 function isOffensive(text) {
-	// avoid using slurs
-	// list from https://github.com/dariusk/wordfilter/
-	var blacklist = [
-		"skank",
-		"wetback",
-		"bitch",
-		"cunt",
-		"dick",
-		"douchebag",
-		"dyke",
-		"fag",
-		"nigger",
-		"nigga",
-		"tranny",
-		"trannie",
-		"paki",
-		"pussy",
-		"retard",
-		"slut",
-		"titt",
-		"tits",
-		"whore",
-		"hoes",
-		"chink",
-		"fatass",
-		"shemale",
-		"daygo",
-		"dego",
-		"dago",
-		"gook",
-		"kike",
-		"kraut",
-		"spic",
-		"twat",
-		"lesbo",
-		"homo",
-		"fatso",
-		"lardass",
-		"jap",
-		"biatch",
-		"tard",
-		"gimp",
-		"gyp",
-		"chinaman",
-		"chinamen",
-		"golliwog",
-		"crip",
-		"raghead",
-		"rape",
-		"raping",
-		"marijuana",
-		"cocaine"
-	];
-
+	// detect any offensive word on the blacklist
 	for (var i = 0; i < blacklist.length; i++) {
 		if (text.toLowerCase().indexOf( blacklist[i] ) >= 0) {
 			console.log( blacklist[i] + " is offensive." );
