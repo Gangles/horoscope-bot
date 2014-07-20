@@ -14,6 +14,7 @@ var twitterSearch = {
 
 // global bot variables
 var maxTwitterID = 0;
+var recentTweets = [];
 var starSign = Math.floor((Math.random() * 12));
 
 function searchTwitter() {
@@ -78,11 +79,21 @@ function parseTweets( statuses )
 		
 		// if we're ready, send the tweet
 		if ( divinations.length > 1 ) {
-			var tweet = getStarSignMessage( starSign );
-			tweet += "You will " + divinations.shift() + ", ";
-			tweet += "but you will " + divinations.shift() + ".";
+			// get two matched statements to post
+			var first = divinations.shift();
+			var second = divinations.shift();
+			
+			// record the 10 most recent matches
+			recentTweets.push(first, second);
+			while (recentTweets.length > 10) {
+				recentTweets.shift();
+			}
+			
+			// assemble the tweet and post it
+			var tweet = getStarSignMessage( starSign++ );
+			tweet += "You will " + first + ", ";
+			tweet += "but you will " + second + ".";
 			postTweet( tweet );
-			++starSign;
 		}
 	} catch (e) {
 		// Log oAuth errors if any.
@@ -115,6 +126,7 @@ function findDivination(text, matches) {
 		"you will never see this",
 		"face their own karma",
 		"let you go or give up on you",
+		"will attract a better next",
 		// avoid threats
 		"get pregnant and die",
 		"you will die",
@@ -159,7 +171,7 @@ function findDivination(text, matches) {
 	}
 
 	// match every character after "you will" until punctuation or the end of input
-	var re = /you will ([\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})(?:[$\r\n]|[^\w\s&'àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ])/mi;
+	var re = /you will ([\w\s\/&'’àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ]{10,140})(?:[$\r\n]|[^\w\s\/&'’àèìòùáéíóúýâêîôûãñõäëïöüÿçßøåæœ])/mi;
 	
 	// find a substring that matches the regex
 	var match = re.exec(text);
@@ -168,8 +180,17 @@ function findDivination(text, matches) {
 		best = match[1].trim();
 	}
 	
+	// reject matches already found in recent tweets
+	for (var i = 0; i < recentTweets.length; i++) {
+		var recent = recentTweets[i].toLowerCase();
+		if (recent.indexOf(best.toLowerCase()) >= 0) {
+			return 0;
+		}
+	}
+	
 	// record appropriate matches
-	if ( best.length > 18 && best.length < 49 && best.split(" ").length > 2 && !isOffensive(best) ) {
+	var wordCount = best.split(" ").length;
+	if ( best.length > 18 && best.length < 49 && wordCount > 2 && !isOffensive(best) ) {
 		return best;
 	}
 	
@@ -273,5 +294,5 @@ function isOffensive(text) {
 // try to post a tweet as soon as we run the program
 searchTwitter();
 
-// post again every 15 minutes
-setInterval(searchTwitter, 1000 * 60 * 15);
+// post again every 20 minutes
+setInterval(searchTwitter, 1000 * 60 * 20);
