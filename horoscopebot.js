@@ -9,7 +9,7 @@ var twitterSearch = {
 	q: "%22you%20will%22",
 	count: 40,
 	lang: "en",
-	result_type: "recent"
+	result_type: "mixed"
 };
 
 // avoid using slurs: https://github.com/dariusk/wordfilter/
@@ -99,7 +99,7 @@ function parseTweets( statuses )
 			
 			// record the 10 most recent matches
 			recentTweets.push(first, second);
-			while (recentTweets.length > 10) {
+			while (recentTweets.length > 20) {
 				recentTweets.shift();
 			}
 			
@@ -127,6 +127,7 @@ function findDivination(text, matches) {
 		"israel",
 		"west bank",
 		"gaza",
+		"hamas",
 		// avoid common tweets
 		"follow me",
 		"you will ever",
@@ -134,11 +135,15 @@ function findDivination(text, matches) {
 		"face their own karma",
 		"let you go or give up on you",
 		"will attract a better next",
+		"jozan or sepah",
 		// avoid threats
 		"get pregnant and die",
 		"you will die",
 		"kill you",
-		"will fuck you up"
+		"will fuck you up",
+		// avoid weird common mispellings
+		"youï",
+		"donï"
 	];
 
 	for (var i = 0; i < toAvoid.length; i++) {
