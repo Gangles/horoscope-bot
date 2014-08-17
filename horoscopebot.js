@@ -7,7 +7,7 @@ var T = new Twit(require('./config.js'));
 // https://dev.twitter.com/docs/api/1.1/get/search/tweets
 var twitterSearch = {
 	q: "%22you%20will%22",
-	count: 40,
+	count: 50,
 	lang: "en",
 	result_type: "mixed"
 };
@@ -97,9 +97,9 @@ function parseTweets( statuses )
 			var first = divinations.shift();
 			var second = divinations.shift();
 			
-			// record the 10 most recent matches
+			// record the most recent matches
 			recentTweets.push(first, second);
-			while (recentTweets.length > 20) {
+			while (recentTweets.length > 30) {
 				recentTweets.shift();
 			}
 			
@@ -121,29 +121,38 @@ function findDivination(text, matches) {
 		// avoid being insensitive
 		"rest in peace",
 		"you will be missed",
-		"enter jannah",
+		"jannah",
 		"allah",
 		"ukraine",
 		"israel",
 		"west bank",
 		"gaza",
 		"hamas",
+		"ferguson",
 		// avoid common tweets
 		"follow me",
 		"you will ever",
 		"you will never see this",
+		"you will never notice",
 		"face their own karma",
 		"let you go or give up on you",
 		"will attract a better next",
+		"receive a code via email that is",
+		"the latest trend in weddings",
 		"jozan or sepah",
+		"cameron dallas",
+		"brad simpson",
+		"luke brooks",
 		// avoid threats
 		"get pregnant and die",
 		"you will die",
+		"you will get shot",
 		"kill you",
 		"will fuck you up",
 		// avoid weird common mispellings
 		"youï",
-		"donï"
+		"donï",
+		"donâ"
 	];
 
 	for (var i = 0; i < toAvoid.length; i++) {
@@ -165,6 +174,10 @@ function findDivination(text, matches) {
 	
 	// fix the broken ampersands twitter sends
 	text = text.replace(/&amp;/g, "&");
+	
+	// fix angle brackets too
+	text = text.replace(/&lt;/g, "<");
+	text = text.replace(/&gt;/g, ">");
 	
 	// find all hashtags
 	var hashtags;
