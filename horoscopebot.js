@@ -125,6 +125,7 @@ function findDivination(text, matches) {
 		"allah",
 		"ukraine",
 		"israel",
+		"palestin",
 		"west bank",
 		"gaza",
 		"hamas",
@@ -134,6 +135,7 @@ function findDivination(text, matches) {
 		"you will ever",
 		"you will never see this",
 		"you will never notice",
+		"meet your fav",
 		"face their own karma",
 		"let you go or give up on you",
 		"will attract a better next",
@@ -143,11 +145,14 @@ function findDivination(text, matches) {
 		"cameron dallas",
 		"brad simpson",
 		"luke brooks",
+		"ashton irwin",
+		"calum hood",
 		// avoid threats
 		"get pregnant and die",
 		"you will die",
 		"you will get shot",
 		"kill you",
+		"killing you",
 		"will fuck you up",
 		// avoid weird common mispellings
 		"youï",
@@ -275,5 +280,5 @@ function isOffensive(text) {
 // try to post a tweet as soon as we run the program
 searchTwitter();
 
-// post again every 20 minutes
-setInterval(searchTwitter, 1000 * 60 * 20);
+// post again every 30 minutes
+setInterval(searchTwitter, 1000 * 60 * 30);
