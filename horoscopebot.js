@@ -121,6 +121,7 @@ function findDivination(text, matches) {
 		// avoid being insensitive
 		"rest in peace",
 		"you will be missed",
+		"cancer",
 		"jannah",
 		"allah",
 		"ukraine",
@@ -166,10 +167,9 @@ function findDivination(text, matches) {
 		}
 	}
 
-	// the only case-sensitive rule...
-	if (/RIP/.test(text)) {
-		return 0;
-	}
+	// a couple of case-sensitive words to avoid
+	if (/RIP/.test(text)) return 0;
+	if (/AIDS/.test(text)) return 0;
 	
 	// hacky way to remove links
 	text = text.replace(/http/g, ".");
