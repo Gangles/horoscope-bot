@@ -27,6 +27,7 @@ try {
 }
 
 // global bot variables
+var REPEAT_MEMORY = 100;
 var maxTwitterID = 0;
 var recentTweets = [];
 var starSign = Math.floor((Math.random() * 12));
@@ -99,7 +100,7 @@ function parseTweets( statuses )
 			
 			// record the most recent matches
 			recentTweets.push(first, second);
-			while (recentTweets.length > 30) {
+			while (recentTweets.length > REPEAT_MEMORY) {
 				recentTweets.shift();
 			}
 			
