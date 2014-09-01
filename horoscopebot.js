@@ -1,5 +1,4 @@
-// import twitter library
-// https://github.com/ttezel/twit
+// import twitter library: https://github.com/ttezel/twit
 var Twit = require('twit');
 var T = new Twit(require('./config.js'));
 
@@ -14,23 +13,53 @@ var twitterSearch = {
 
 // avoid using slurs: https://github.com/dariusk/wordfilter/
 var blacklist = [];
+var toAvoid = [];
 try {
 	var fs = require('fs');
-	var data = fs.readFileSync('blacklist.json', 'ascii');
+	var data = fs.readFileSync('blacklist.json', 'utf8');
 	data = JSON.parse(data);
 	blacklist = data.badwords;
-	console.log("Blacklist initialized with " + blacklist.length + " words.")
+	toAvoid = data.avoidphrase;
+	console.log( "Blacklist initialized:" );
+	console.log( blacklist.length + " words & " + toAvoid.length + " phrases.");
 } catch (err) {
 	console.error("There was an error opening the blacklist file:");
 	console.log(err);
 	process.exit(1);
 }
 
+// fuzzy string matching: https://github.com/Glench/fuzzyset.js
+require('fuzzyset.js');
+
 // global bot variables
+var DO_TWEET = true;
 var REPEAT_MEMORY = 100;
 var maxTwitterID = 0;
 var recentTweets = [];
 var starSign = Math.floor((Math.random() * 12));
+
+function waitToBegin() {
+	// schedule tweet every :15 and :45
+	var d = new Date();
+	target = 0;
+	if (d.getMinutes() < 15) {
+		target = 15;
+	} else if (d.getMinutes() < 45) {
+		target = 45;
+	} else {
+		target = 75;
+	}
+	var timeout = 60 - d.getSeconds();
+	timeout += (target - d.getMinutes() - 1) * 60;
+	setTimeout(beginTweeting, timeout * 1000);
+	console.log("Wait " + timeout + "s for first tweet.");
+}
+
+function beginTweeting() {
+	// post a tweet, repeat every 30 minutes
+	searchTwitter();
+	setInterval(searchTwitter, 1000 * 60 * 30);
+}
 
 function searchTwitter() {
 	// initiate a twitter API search
@@ -52,7 +81,9 @@ function searchCallback( error, data, response ) {
 function postTweet( message ) {
 	// post a new status to the twitter API
 	console.log( "Posting tweet:", message );
-	T.post('statuses/update', { status: message }, postCallback);
+	if (DO_TWEET) {
+		T.post('statuses/update', { status: message }, postCallback);
+	}
 }
 
 function postCallback( error, data, response ) {
@@ -117,56 +148,8 @@ function parseTweets( statuses )
 }
 
 function findDivination(text, matches) {	
-	// general text patterns to avoid
-	var toAvoid = [
-		// avoid being insensitive
-		"rest in peace",
-		"you will be missed",
-		"cancer",
-		"jannah",
-		"allah",
-		"ukraine",
-		"israel",
-		"palestin",
-		"west bank",
-		"gaza",
-		"hamas",
-		"ferguson",
-		// avoid common tweets
-		"follow me",
-		"you will ever",
-		"you will never see this",
-		"you will never notice",
-		"meet your fav",
-		"face their own karma",
-		"let you go or give up on you",
-		"will attract a better next",
-		"receive a code via email that is",
-		"the latest trend in weddings",
-		"jozan or sepah",
-		"cameron dallas",
-		"brad simpson",
-		"luke brooks",
-		"ashton irwin",
-		"calum hood",
-		// avoid threats
-		"get pregnant and die",
-		"you will die",
-		"you will get shot",
-		"kill you",
-		"killing you",
-		"will fuck you up",
-		// avoid weird common mispellings
-		"youï",
-		"donï",
-		"donâ"
-	];
-
-	for (var i = 0; i < toAvoid.length; i++) {
-		if (text.toLowerCase().indexOf(toAvoid[i]) >= 0) {
-			return 0;
-		}
-	}
+	// avoid certain phrases altogether
+	if (isOffensive(text, toAvoid)) return 0;
 
 	// a couple of case-sensitive words to avoid
 	if (/RIP/.test(text)) return 0;
@@ -208,34 +191,25 @@ function findDivination(text, matches) {
 	// find a substring that matches the regex
 	var match = re.exec(text);
 	var best = "";
-	if (match !== null) {
-		best = match[1].trim();
-	}
+	if (match !== null) best = match[1].trim();
 	
-	// avoid text we've already matched and recorded
-	for (var i = 0; i < matches.length; i++) {
-		var matched = matches[i].toLowerCase();
-		if (matched.indexOf(best.toLowerCase()) >= 0) {
-			return 0;
-		}
-	}
+	// enforce a string length range
+	if (best.length < 19 || best.length > 48) return 0;
+	
+	// enforce a minimum word count
+	if (best.split(" ").length < 3) return 0;
+	
+	// reject text too similar to what's already matched & recorded
+	if (fuzzyMatch(best, matches, 0.5)) return 0;
 	
 	// reject matches already found in this bot's recent tweets
-	for (var i = 0; i < recentTweets.length; i++) {
-		var recent = recentTweets[i].toLowerCase();
-		if (recent.indexOf(best.toLowerCase()) >= 0) {
-			return 0;
-		}
-	}
+	if (fuzzyMatch(best, recentTweets, 0.5)) return 0;
 	
-	// record appropriate matches
-	var wordCount = best.split(" ").length;
-	if ( best.length > 18 && best.length < 49 && wordCount > 2 && !isOffensive(best) ) {
-		return best;
-	}
+	// reject offensive terms
+	if (isOffensive(best, blacklist)) return 0;
 	
 	// didn't find a match
-	return 0;
+	return best;
 }
 
 function getStarSignMessage(sign) {
@@ -267,19 +241,26 @@ function getStarSignMessage(sign) {
 	}
 }
 
-function isOffensive(text) {
+function fuzzyMatch(term, textArray, threshold) {
+	// find fuzzy matches for the term in the given set
+	if(textArray.length == 0) return false;
+	var fs = FuzzySet(textArray);
+	var matches = fs.get(term);
+	for (var i = 0; i < matches.length; i++) {
+		if (matches[i][0] > threshold) return true;
+	}
+	return false;
+}
+
+function isOffensive(text, list) {
 	// detect any offensive word on the blacklist
-	for (var i = 0; i < blacklist.length; i++) {
-		if (text.toLowerCase().indexOf( blacklist[i] ) >= 0) {
-			console.log( blacklist[i] + " is offensive." );
+	for (var i = 0; i < list.length; i++) {
+		if (text.toLowerCase().indexOf( list[i] ) >= 0) {
 			return true;
 		}
 	}
 	return false;
 }
 
-// try to post a tweet as soon as we run the program
-searchTwitter();
-
-// post again every 30 minutes
-setInterval(searchTwitter, 1000 * 60 * 30);
+// start scheduling tweets
+waitToBegin();
