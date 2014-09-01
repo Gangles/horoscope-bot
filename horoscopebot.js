@@ -23,8 +23,7 @@ try {
 	console.log( "Blacklist initialized:" );
 	console.log( blacklist.length + " words & " + toAvoid.length + " phrases.");
 } catch (err) {
-	console.error("There was an error opening the blacklist file:");
-	console.log(err);
+	console.log("Error opening blacklist file:", err);
 	process.exit(1);
 }
 
@@ -51,8 +50,8 @@ function waitToBegin() {
 	}
 	var timeout = 60 - d.getSeconds();
 	timeout += (target - d.getMinutes() - 1) * 60;
-	setTimeout(beginTweeting, timeout * 1000);
 	console.log("Wait " + timeout + "s for first tweet.");
+	setTimeout(beginTweeting, timeout * 1000);
 }
 
 function beginTweeting() {
@@ -243,18 +242,19 @@ function getStarSignMessage(sign) {
 
 function fuzzyMatch(term, textArray, threshold) {
 	// find fuzzy matches for the term in the given set
-	if(textArray.length == 0) return false;
-	var fs = FuzzySet(textArray);
-	var matches = fs.get(term);
-	for (var i = 0; i < matches.length; i++) {
-		if (matches[i][0] > threshold) return true;
+	if (textArray.length == 0) return false;
+	var matches = FuzzySet(textArray).get(term);
+	if(matches !== null) {
+		for (var i = 0; i < matches.length; ++i) {
+			if (matches[i][0] > threshold) return true;
+		}
 	}
 	return false;
 }
 
 function isOffensive(text, list) {
 	// detect any offensive word on the blacklist
-	for (var i = 0; i < list.length; i++) {
+	for (var i = 0; i < list.length; ++i) {
 		if (text.toLowerCase().indexOf( list[i] ) >= 0) {
 			return true;
 		}
