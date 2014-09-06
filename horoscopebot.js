@@ -244,7 +244,7 @@ function fuzzyMatch(term, textArray, threshold) {
 	// find fuzzy matches for the term in the given set
 	if (textArray.length == 0) return false;
 	var matches = FuzzySet(textArray).get(term);
-	if(matches !== null) {
+	if (matches !== null) {
 		for (var i = 0; i < matches.length; ++i) {
 			if (matches[i][0] > threshold) return true;
 		}
