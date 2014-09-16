@@ -160,7 +160,8 @@ function findDivination(text, matches) {
 	// replace newlines with periods
 	text = text.replace(/(\r\n|\n|\r)/gm, ".");
 	
-	// fix the broken ampersands twitter sends
+	// fix the ampersands
+	text = text.replace(/&amp;mp;/g, "&");
 	text = text.replace(/&amp;/g, "&");
 	
 	// fix angle brackets too
