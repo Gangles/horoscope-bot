@@ -60,20 +60,20 @@ function waitToBegin() {
 }
 
 function getRecentTweets() {
-	// initialize the recent tweet list
-	T.get('statuses/user_timeline', {screen_name : 'HoroscopeBot'}, recentCallback);
+	// initiTalize the recent tweet list
+	var selfTimeline = {screen_name : 'HoroscopeBot', count : 100};
+	T.get('statuses/user_timeline', selfTimeline, recentCallback);
 }
 
 function recentCallback( error, data, response ) {
 	if ( response.statusCode == 200 && !error) {
 		// record recently tweeted phrases
-		for (var i = 0; i < data.statuses.length; ++i)
+		for (var i = 0; i < data.length; ++i)
 		{
-			var text = data.statuses[i].text;
+			var text = data[i].text;
 			var divination = text.substr(text.indexOf(":") + 10);
 			recentTweets.push.apply(recentTweets, divination.split(", but you will "));
-			if (parseInt(maxTwitterID, 10) < data.statuses[i].id)
-				maxTwitterID = data.statuses[i].id_str;
+			if (maxTwitterID < data[i].id) maxTwitterID = data[i].id;
 		}
 
 		// post a new tweet
@@ -138,7 +138,7 @@ function parseTweets( statuses )
 			// if we found a match, record it
 			if (match != 0) {
 				divinations.push(match);
-				maxTwitterID = tweet.id_str;
+				maxTwitterID = tweet.id;
 			}
 	
 			i--;
