@@ -50,14 +50,38 @@ function waitToBegin() {
 	}
 	var timeout = 60 - d.getSeconds();
 	timeout += (target - d.getMinutes() - 1) * 60;
-	console.log("Wait " + timeout + "s for first tweet.");
-	setTimeout(beginTweeting, timeout * 1000);
+
+	// heroku scheduler runs every 10 minutes
+	console.log("Wait " + timeout + " seconds for next tweet");
+	if (timeout < 10 * 60)
+		setTimeout(getRecentTweets, timeout * 1000);
+	else
+		process.exit(0);
 }
 
-function beginTweeting() {
-	// post a tweet, repeat every 30 minutes
-	searchTwitter();
-	setInterval(searchTwitter, 1000 * 60 * 30);
+function getRecentTweets() {
+	// initialize the recent tweet list
+	T.get('statuses/user_timeline', {screen_name : 'HoroscopeBot'}, recentCallback);
+}
+
+function recentCallback( error, data, response ) {
+	if ( response.statusCode == 200 && !error) {
+		// record recently tweeted phrases
+		for (var i = 0; i < data.statuses.length; ++i)
+		{
+			var text = data.statuses[i].text;
+			var divination = text.substr(text.indexOf(":") + 10);
+			recentTweets.push.apply(recentTweets, divination.split(", but you will "));
+			if (parseInt(maxTwitterID, 10) < data.statuses[i].id)
+				maxTwitterID = data.statuses[i].id_str;
+		}
+
+		// post a new tweet
+		searchTwitter();
+	}
+	else {
+		console.log("Self timeline error:", error);
+	}
 }
 
 function searchTwitter() {
@@ -68,7 +92,6 @@ function searchTwitter() {
 
 function searchCallback( error, data, response ) {
 	// twitter API callback with relevant tweets
-	console.log(error, data);
 	if ( response.statusCode == 200 && !error) {
 		parseTweets( data.statuses );
 	}
@@ -87,7 +110,6 @@ function postTweet( message ) {
 
 function postCallback( error, data, response ) {
 	// twitter API callback from posting tweet
-	console.log(error, data);
 	if ( response.statusCode == 200 && !error) {
 		console.log("Post tweet success!");
 	}
