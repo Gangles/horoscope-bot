@@ -35,7 +35,6 @@ var DO_TWEET = true;
 var REPEAT_MEMORY = 100;
 var maxTwitterID = 0;
 var recentTweets = [];
-var starSign = Math.floor((Math.random() * 12));
 
 function waitToBegin() {
 	// schedule tweet every :15 and :45
@@ -75,6 +74,9 @@ function recentCallback( error, data, response ) {
 			recentTweets.push.apply(recentTweets, divination.split(", but you will "));
 			if (maxTwitterID < data[i].id) maxTwitterID = data[i].id;
 		}
+
+		// TODO: temp for debugging
+		console.log(recentTweets.toString());
 
 		// post a new tweet
 		searchTwitter();
@@ -156,8 +158,13 @@ function parseTweets( statuses )
 				recentTweets.shift();
 			}
 			
+			// assign the star sign
+			var d = new Date();
+			var starSign = d.getHours() * 2;
+			if (d.getMinutes() > 30) ++starSign;
+
 			// assemble the tweet and post it
-			var tweet = getStarSignMessage( starSign++ );
+			var tweet = getStarSignMessage( starSign );
 			tweet += "You will " + first + ", ";
 			tweet += "but you will " + second + ".";
 			postTweet( tweet );
