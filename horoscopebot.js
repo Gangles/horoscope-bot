@@ -70,13 +70,10 @@ function recentCallback( error, data, response ) {
 		for (var i = 0; i < data.length; ++i)
 		{
 			var text = data[i].text;
-			var divination = text.substr(text.indexOf(":") + 10);
+			var divination = text.substr(text.indexOf(":") + 11);
 			recentTweets.push.apply(recentTweets, divination.split(", but you will "));
 			if (maxTwitterID < data[i].id) maxTwitterID = data[i].id;
 		}
-
-		// TODO: temp for debugging
-		console.log(recentTweets.toString());
 
 		// post a new tweet
 		searchTwitter();
