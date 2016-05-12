@@ -70,7 +70,13 @@
 		"bomb",
 		"behead",
 		"ptsd",
-		"dox"
+		"dox",
+		"hostage",
+		"kill",
+		"bullet",
+		"isis",
+		"trump",
+		"hillary"
 	],
 	"avoidphrase": [
 		"rest in peace",
