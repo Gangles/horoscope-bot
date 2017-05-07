@@ -37,16 +37,9 @@ var maxTwitterID = 0;
 var recentTweets = [];
 
 function waitToBegin() {
-	// schedule tweet every :15 and :45
+	// schedule tweet every hour on the :15
 	var d = new Date();
-	target = 0;
-	if (d.getMinutes() < 15) {
-		target = 15;
-	} else if (d.getMinutes() < 45) {
-		target = 45;
-	} else {
-		target = 75;
-	}
+	target = (d.getMinutes() < 15)? 15 : 75;
 	var timeout = 60 - d.getSeconds();
 	timeout += (target - d.getMinutes() - 1) * 60;
 
